@@ -11,64 +11,70 @@
 
 import { GetStaticPaths, GetStaticProps, InferGetStaticPropsType } from "next";
 
-//next.jsのビルド時に実行され、動的ルートのためのすべてのパスを生成する関数
+// next.js のビルド時に実行され、動的ルートのためのすべてのパスを生成する関数
 export const getStaticPaths: GetStaticPaths = async () => {
     try {
-        //外部APIエンドポイントから投稿データをフェッチ
+        // 外部 API エンドポイントから投稿データをフェッチ（取得）
         const res = await fetch("https://jsonplaceholder.typicode.com/posts");
 
-        //レスポンスのステータスコードがエラーのときの対応
+        // レスポンスのステータスコードがエラーの場合にエラーハンドリング
         if (!res.ok) {
             throw new Error(`Failed to fetch posts, status: ${res.status}`);
         }
-        const posts: { id: number }[] = await res.json(); //フェッチしたデータをJson形式で取得
 
-        //フェッチした投稿データからぱす(URLパラメータ)を生成
+        // フェッチしたデータを JSON 形式で取得
+        const posts: { id: number }[] = await res.json();
+
+        // フェッチした投稿データからパス（URL パラメータ）を生成
         const paths = posts.map((post) => ({
-            //paramsオベジェクトは動的ルートのパラメータ(ここでは)idを含む
-            params: { id: post.id.toString() }, //idは文字列として扱う必要がある
+            // "params" オブジェクトは動的ルートのパラメータ（この場合は "id"）を含む
+            params: { id: post.id.toString() }, // id は文字列として扱う必要があるため、文字列に変換
         }));
 
-        //生成されたすべてのパスと、生成するパスが見つからない場合の処理を返す
-        return { paths, fallback: false }; //`fallback:false`だと指定されたパス以外は404ページが表示される
+        // 生成されたすべてのパスと、生成するパスが見つからない場合の処理を返す
+        return { paths, fallback: false };
+        // `fallback: false` により、生成されていないパスがリクエストされた場合は 404 ページを表示する
     } catch (error) {
-        console.error(error);
-        return { paths: [], fallback: false }; //エラーの場合は空のパスを渡す
+        console.error(error); // エラーをコンソールに表示
+        return { paths: [], fallback: false }; // エラー時には空のパスを返し、404 ページを表示させる
     }
 };
 
-//各パス(URLパラメータ)ごとにデータを取得し、静的なページを生成するための関数
+// 各パス（URL パラメータ）ごとにデータを取得し、静的なページを生成するための関数
 export const getStaticProps: GetStaticProps = async ({ params }) => {
     try {
-        //"params.id"を使って個別の投稿データをフェッチ
+        // "params.id" を使って、個別の投稿データを API からフェッチ
         const res = await fetch(`https://jsonplaceholder.typicode.com/posts/${params?.id}`);
 
+        // フェッチに失敗した場合のエラーハンドリング
         if (!res.ok) {
             throw new Error(`Failed to fetch post, status: ${res.status}`);
         }
 
-        const post: { id: number; title: string; body: string } = await res.json(); //フェッチしたデータをJSON形式で取得
+        // フェッチしたデータを JSON 形式で取得
+        const post: { id: number; title: string; body: string } = await res.json();
 
-        //"props" としてページコンポーネントにデータを渡す
+        // "props" としてページコンポーネントにデータを渡す
         return {
-            props: { post }, //"post"データをコンポーネントにわらす
+            props: { post }, // "post" オブジェクトをページコンポーネントに渡す
         };
     } catch (error) {
-        console.error(error);
-        return { notFound: true };
+        console.error(error); // エラーをコンソールに表示
+        return { notFound: true }; // データが取得できなかった場合は 404 ページを返す
     }
 };
 
-//型推論を使ってpropsの型を設定
+// ページコンポーネントで受け取ったデータを型推論を使って型を定義
 const Post = ({ post }: InferGetStaticPropsType<typeof getStaticProps>) => {
     return (
         <div>
-            {/* 投稿のタイトル */}
+            {/* 投稿のタイトルを表示 */}
             <h1>{post.title}</h1>
-            {/* 投稿の本文 */}
+            {/* 投稿の本文を表示 */}
             <p>{post.body}</p>
         </div>
     );
 };
 
-export default Post; //コンポーネントをエクスポートしてページとして使えるようにする。
+// コンポーネントをエクスポートしてページとして使えるようにする
+export default Post;

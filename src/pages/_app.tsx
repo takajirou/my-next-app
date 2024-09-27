@@ -11,11 +11,11 @@ export default function App({ Component, pageProps }: AppProps) {
                 <title>aiueo</title>
             </Head>
             {/* 全体に共通するヘッダーを書く場合はこの上 */}
-            <Component {...pageProps} />;{/* 全体に共通するフッター */}
+            <Component {...pageProps} />
+            {/* 全体に共通するフッター */}
             <footer className={styles.footer}>
                 <p>&copy; 2024 MyErbsite. All rights reserved</p>
             </footer>
-            ;
         </>
     );
 }
